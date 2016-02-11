@@ -1,5 +1,5 @@
 <?
-require(dirname(__FILE__).'/src/mysensors_class.php');
+require(dirname(__FILE__).'/src/mysensors.class.php');
 
 $ip			='10.1.7.40';
 $mys=new MySensorSend($ip);
