@@ -1,5 +1,5 @@
 {
-	"gh_id": 		"soif/mysensors_php_api",
+	"gh_id": 		"soif/MySensors_Php_API",
 	"name": 		"MySensors Php API",
 	"baseline": 	"Php class implementing methods to directly send messages (and get answers) to a MySensors Ethernet gateway.",
 	"description":	"readme.md",
