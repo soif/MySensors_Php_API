@@ -151,8 +151,6 @@ function formTypeChange(with_update=true){
 	if(with_update){
 		form2message();
 	}
-	else{
-	}
 }
 
 function UpdateWait(){
@@ -177,7 +175,7 @@ function UpdateWait(){
 	}
 }
 $( document ).ready(function() {
-	formTypeChange(false);
+	formTypeChange();
 	$('#td_type SELECT').on('keyup change',function(e){
 		formTypeChange();
 	});
