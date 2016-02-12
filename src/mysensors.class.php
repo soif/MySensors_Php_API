@@ -235,21 +235,12 @@ class MySensorSend extends MySensors{
 		$sub_type	=$this->_convertSubType($type, $sub_type);
 		if($type !== false && $sub_type !== false ){
 			$message=$this->_message2array($node_id, $child_id, $type, $ack, $sub_type, $payload);
-			if($return_answer){
-				return $this->_telnetGet($message);
-			}
-			else{
-				return $this->_telnetSend($message);
-			}
-		}
-		
-		// debug @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-		echo "<hr><pre>t=$type $sub\n";print_r($var);echo "\n</pre>\n\n";exit;
-		
+			return $this->_telnet($message,$return_answer);
+		}		
 	}
 
 	// ---------------------------------------------------------
-	public function present($node_id,$child_id,$sub_type,$ack=false){
+	public function presentation($node_id,$child_id,$sub_type,$ack=false){
 		$type=$this->message_types['presentation'];
 		//return $this->sendMessage($node_id, $child_id, $type, $ack, $sub_type, $payload, $return_answer);
 		return $this->sendMessage($node_id, $child_id, $type, $ack, $sub_type, '');
@@ -268,15 +259,9 @@ class MySensorSend extends MySensors{
 	}
 
 	// ---------------------------------------------------------
-	public function internal($node_id,$child_id,$sub_type,$ack=false){
+	public function internal($node_id,$child_id,$sub_type,$ack=false,$return_answer=false){
 		$type=$this->message_types['internal'];
-		return $this->sendMessage($node_id, $child_id, $type, $ack, $sub_type, '');
-	}
-
-	// ---------------------------------------------------------
-	public function internal_get($node_id,$child_id,$sub_type,$ack=false){
-		$type=$this->message_types['internal'];
-		return $this->sendMessage($node_id, $child_id, $type, $ack, $sub_type, '',true);
+		return $this->sendMessage($node_id, $child_id, $type, $ack, $sub_type, '',$return_answer);
 	}
 
 /*
@@ -370,64 +355,57 @@ class MySensorSend extends MySensors{
 	}
 
 	// ---------------------------------------------------------
-	private function _telnetSend($message){
+	private function _telnet($message,$fetch_answer=false){
 		$this->message		=$message;
 		$this->raw_message	=$this->_buildRawMessage($this->message);
 		$this->answer		='';
 		$this->raw_answer	='';
+		
+		if($fetch_answer){
+			$timeout=$this->socket_timeout_answer;
+		}
+		else{
+			$timeout=$this->socket_timeout_message;			
+		}
 
-		$socket = @fsockopen($this->gateway_ip, $this->gateway_port, $errno, $errstr,$this->socket_timeout_message);
+		$socket = @fsockopen($this->gateway_ip, $this->gateway_port, $errno, $errstr,$timeout);
 		if(!$socket){
 			return false;
 		}
+
 		if(!fputs($socket, $this->raw_message."\n")){
 			@fclose($socket);
 			return false;
 		}
-		fclose($socket);
-		return true;
-	}
 
-
-
-	// ---------------------------------------------------------
-	private function _telnetGet($message){
-		$this->message		=$message;
-		$this->raw_message	=$this->_buildRawMessage($this->message);
-		$this->answer		='';
-		$this->raw_answer	='';
-
-		$socket = @fsockopen($this->gateway_ip, $this->gateway_port, $errno, $errstr, $this->socket_timeout_answer);
-		if(!$socket){
-			return false;
-		}
-		if(!fputs($socket, $this->raw_message."\n")){
-			@fclose($socket);
-			return false;
-		}
-		$line='';
-		$until_t = time() + $this->socket_timeout_answer;
-		while(true){
-			if(!$socket or time() > $until_t){
-				break;
-			}
-			
-	        $char =fread($socket, 1);
-	        $line .= $char;
-	        if($char=="\n"){
-				if($this->answer = $this->_filterAnswer($line)){
-					$this->raw_answer = trim($line);
-					$payload = $this->answer['payload'];
+		if($fetch_answer){
+			$line='';
+			$until_t = time() + $timeout;
+			while(true){
+				if(!$socket or time() > $until_t){
 					break;
 				}
-				$line='';
-			}
-	    }
-		
-		@fclose($socket);
-		return $payload;
-	}
+			
+		        $char =fread($socket, 1);
+		        $line .= $char;
+		        if($char=="\n"){
+					if($this->answer = $this->_filterAnswer($line)){
+						$this->raw_answer = trim($line);
+						$out = $this->answer['payload'];
+						break;
+					}
+					$line='';
+				}
+		    }
+			
+		}
+		else{
+			$out=true;
+		}
 
+		@fclose($socket);
+		return $out;
+	}
 }
 
 
