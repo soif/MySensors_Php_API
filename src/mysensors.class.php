@@ -214,10 +214,10 @@ class MySensors{
 // #######################################################################################
 class MySensorSend extends MySensors{
 
-	protected $message 		=array();
-	protected $answer		=array();
-	protected $raw_message 	='';
-	protected $raw_answer	='';
+	protected $last_message 		=array();
+	protected $last_answer			=array();
+	protected $last_raw_message 	='';
+	protected $last_raw_answer	='';
 
 	private $socket_timeout_message	=2;
 	private $socket_timeout_answer	=4;
@@ -309,12 +309,12 @@ class MySensorSend extends MySensors{
 
 	// ---------------------------------------------------------
 	public function getRawMessage(){
-		return $this->raw_message;	
+		return $this->last_raw_message;	
 	}
 
 	// ---------------------------------------------------------
 	public function getRawAnswer(){
-		return $this->raw_answer;
+		return $this->last_raw_answer;
 	}
 
 
@@ -345,10 +345,10 @@ class MySensorSend extends MySensors{
 	// ---------------------------------------------------------
 	private function _filterAnswer($line){
 		$a=$this->_parseMessage($line);
-		if(	$a['node']	==$this->message['node'] and 
-			($a['child']==$this->message['child'] or ($a['node']==0 and $a['child']==255)  ) and
-			$a['type']	== $this->message['type'] and 
-			$a['sub']	== $this->message['sub']
+		if(	$a['node']	==$this->last_message['node'] and 
+			($a['child']==$this->last_message['child'] or ($a['node']==0 and $a['child']==255)  ) and
+			$a['type']	==$this->last_message['type'] and 
+			$a['sub']	==$this->last_message['sub']
 		){
 			return $a;
 		}
@@ -356,10 +356,10 @@ class MySensorSend extends MySensors{
 
 	// ---------------------------------------------------------
 	private function _telnet($message,$fetch_answer=false){
-		$this->message		=$message;
-		$this->raw_message	=$this->_buildRawMessage($this->message);
-		$this->answer		='';
-		$this->raw_answer	='';
+		$this->last_message		=$message;
+		$this->last_raw_message	=$this->_buildRawMessage($this->last_message);
+		$this->last_answer		='';
+		$this->last_raw_answer	='';
 		
 		if($fetch_answer){
 			$timeout=$this->socket_timeout_answer;
@@ -373,7 +373,7 @@ class MySensorSend extends MySensors{
 			return false;
 		}
 
-		if(!fputs($socket, $this->raw_message."\n")){
+		if(!fputs($socket, $this->last_raw_message."\n")){
 			@fclose($socket);
 			return false;
 		}
@@ -389,9 +389,9 @@ class MySensorSend extends MySensors{
 		        $char =fread($socket, 1);
 		        $line .= $char;
 		        if($char=="\n"){
-					if($this->answer = $this->_filterAnswer($line)){
-						$this->raw_answer = trim($line);
-						$out = $this->answer['payload'];
+					if($this->last_answer 		= $this->_filterAnswer($line)){
+						$this->last_raw_answer	= trim($line);
+						$out = $this->last_answer['payload'];
 						break;
 					}
 					$line='';
