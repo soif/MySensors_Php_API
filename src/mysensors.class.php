@@ -32,6 +32,8 @@ class MySensors{
 
 	// http://www.mysensors.org/download/serial_api_15
 	// http://ci.mysensors.org/job/MySensorsArduino/branch/development/Doxygen_HTML/group__MyMessagegrp.html
+	// https://github.com/mysensors/Arduino/blob/development/libraries/MySensors/core/MyMessage.h
+	
 	protected $message_types=array(
 		'presentation'	=> 0,	// Sent by a node when they present attached sensors. This is usually done in setup() at startup.
 		'set'			=> 1,	// This message is sent from or to a sensor when a sensor value should be updated
@@ -78,11 +80,10 @@ class MySensors{
 		'S_SOUND'			=> 33,	// Sound sensor (V_LEVEL (in dB), V_TRIPPED, V_ARMED)
 		'S_VIBRATION'		=> 34,	// Vibration sensor (V_LEVEL (vibration in Hz), V_TRIPPED, V_ARMED)
 		'S_MOISTURE'		=> 35,	// Moisture sensor (V_LEVEL (water content or moisture in percentage?), V_TRIPPED, V_ARMED),
-
-		'S_INFO'			=> 36,	// 
-		'S_GAS'				=> 37,	// 
-		'S_GPS'				=> 38,	// 
-		'S_WATER_QUALITY'	=> 39,	//
+		'S_INFO'			=> 36,	// LCD text device / Simple information device on controller, V_TEXT
+		'S_GAS'				=> 37,	// Gas meter, V_FLOW, V_VOLUME
+		'S_GPS'				=> 38,	// GPS Sensor, V_POSITION
+		'S_WATER_QUALITY'	=> 39,	// V_TEMP, V_PH, V_ORP, V_EC, V_STATUS 
 	);
 
 	protected $setreq_types=array(
@@ -136,13 +137,13 @@ class MySensors{
 		'V_HVAC_SETPOINT_HEAT'	=> 45,	// HVAC/Heater setpoint (S_HVAC, S_HEATER)
 		'V_HVAC_FLOW_MODE'		=> 46,	// Flow mode for HVAC ("Auto", "ContinuousOn", "PeriodicOn") (S_HVAC)
 
-		'V_TEXT'		=> 47,	// 
-		'V_CUSTOM'		=> 48,	// 
-		'V_POSITION'	=> 49,	// 
-		'V_IR_RECORD'	=> 50,	// 
-		'V_PH'			=> 51,	// 
-		'V_ORP'			=> 52,	// 
-		'V_EC'			=> 53,	// 
+		'V_TEXT'		=> 47,	// S_INFO. Text message to display on LCD or controller device
+		'V_CUSTOM'		=> 48,	// Custom messages used for controller/inter node specific commands, preferably using S_CUSTOM device type.
+		'V_POSITION'	=> 49,	// GPS position and altitude. Payload: latitude;longitude;altitude(m). E.g. "55.722526;13.017972;18"
+		'V_IR_RECORD'	=> 50,	// Record IR codes S_IR for playback
+		'V_PH'			=> 51,	// S_WATER_QUALITY, water PH
+		'V_ORP'			=> 52,	// S_WATER_QUALITY, water ORP : redox potential in mV
+		'V_EC'			=> 53,	// S_WATER_QUALITY, water electric conductivity μS/cm (microSiemens/cm)
 	);
 
 	protected $internal_types=array(
@@ -165,16 +166,16 @@ class MySensors{
 		'I_GET_NONCE'			=> 16,	// Used between sensors when requesting nonce.
 		'I_GET_NONCE_RESPONSE'	=> 17,	// Used between sensors for nonce response.
 
-		'I_SIGNING_PRESENTATION'=> 15,	// same as I_REQUEST_SIGNING ?
-		'I_NONCE_REQUEST'		=> 16,	// same as I_GET_NONCE ?
-		'I_NONCE_RESPONSE'		=> 17,	// same as I_GET_NONCE_RESPONSE ?
+		'I_SIGNING_PRESENTATION'=> 15,	// same as I_REQUEST_SIGNING ?	//!< Provides signing related preferences (first byte is preference version)
+		'I_NONCE_REQUEST'		=> 16,	// same as I_GET_NONCE ?	//!< Request for a nonce
+		'I_NONCE_RESPONSE'		=> 17,	// same as I_GET_NONCE_RESPONSE ?	// //!< Payload is nonce data
 
 		'I_HEARTBEAT'			=> 18,	//
 		'I_PRESENTATION'		=> 19,	//
 		'I_DISCOVER'			=> 20,	//
 		'I_DISCOVER_RESPONSE'	=> 21,	//
 		'I_HEARTBEAT_RESPONSE'	=> 22,	//
-		'I_LOCKED'				=> 23,	//
+		'I_LOCKED'				=> 23,	//!< Node is locked (reason in string-payload)
 	);
 
 	protected $stream_types=array(
