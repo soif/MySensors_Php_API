@@ -1,12 +1,12 @@
 <?
-require(dirname(__FILE__).'/src/mysensors_class.php');
+require(dirname(__FILE__).'/src/mysensors.class.php');
 
 $ip			='10.1.7.40';
 $mys=new MySensorSend($ip);
 
 // fetching the Gateway Version -------------------------------
 echo "Gateway version is : ";
-echo $mys->internal_get(0, 0, 'I_VERSION');
+echo $mys->internal(0, 0, 'I_VERSION',false,true);
 echo " <br>\n";
 DisplayMessages(1);
 
@@ -20,9 +20,8 @@ $child_id	='0';
 $type		='V_STATUS';
 $payload	=1;
 
-echo "Sending $type=$payload to node $node_id , child $child_id";
-echo $mys->set($node_id, $child_id,$type,$payload);
-echo " <br>\n";
+echo "Sending $type=$payload to node $node_id , child $child_id<br>\n";
+$mys->set($node_id, $child_id,$type,$payload);
 DisplayMessages(0);
 
 
