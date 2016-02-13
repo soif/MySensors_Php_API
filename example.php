@@ -1,8 +1,13 @@
 <?
 require(dirname(__FILE__).'/src/mysensors.class.php');
 
-$ip			='10.1.7.40';
-$mys=new MySensorSend($ip);
+// instance Class ---------------------------------------------
+//Ethernet Gateway
+$mys=new MySensorSendEthernet('10.1.7.40');
+// or
+//Serial Gateway
+//$mys=new MySensorSendSerial('COM1');
+
 
 // fetching the Gateway Version -------------------------------
 echo "Gateway version is : ";
@@ -12,6 +17,7 @@ DisplayMessages(1);
 
 
 echo "<hr>\n\n";
+
 
 // Sending a message to a node -------------------------------
 
