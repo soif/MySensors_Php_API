@@ -27,9 +27,6 @@
 class MySensors{
 	public $version			='1.1';
 
-	protected $gateway_ip	='';
-	protected $gateway_port=5003;
-
 	// http://www.mysensors.org/download/serial_api_15
 	// http://ci.mysensors.org/job/MySensorsArduino/branch/development/Doxygen_HTML/group__MyMessagegrp.html
 	// https://github.com/mysensors/Arduino/blob/development/libraries/MySensors/core/MyMessage.h
@@ -219,14 +216,9 @@ class MySensorSend extends MySensors{
 	protected $last_raw_message 	='';
 	protected $last_raw_answer	='';
 
-	private $socket_timeout_message	=2;
-	private $socket_timeout_answer	=4;
-
 	// ---------------------------------------------------------
-	function __construct($gw_ip,$gw_port=""){
+	function __construct(){
 		parent::__construct();
-		$this->gateway_ip = $gw_ip;
-		$gw_port and $this->gateway_port=$gw_port;
 	}
 
 	// ---------------------------------------------------------
@@ -235,7 +227,7 @@ class MySensorSend extends MySensors{
 		$sub_type	=$this->_convertSubType($type, $sub_type);
 		if($type !== false && $sub_type !== false ){
 			$message=$this->_message2array($node_id, $child_id, $type, $ack, $sub_type, $payload);
-			return $this->_telnet($message,$return_answer);
+			return $this->_transmit($message,$return_answer);
 		}		
 	}
 
@@ -285,7 +277,7 @@ class MySensorSend extends MySensors{
 	}
 
 	// ---------------------------------------------------------
-	private function _buildRawMessage($message){		
+	protected function _buildRawMessage($message){		
 		$raw  ='';
 		$raw .=$message['node']	. ';';
 		$raw .=$message['child']	. ';';
@@ -297,7 +289,7 @@ class MySensorSend extends MySensors{
 	}
 
 	// ---------------------------------------------------------
-	private function _message2array($node_id, $child_id, $type, $ack, $sub_type, $payload=''){
+	protected function _message2array($node_id, $child_id, $type, $ack, $sub_type, $payload=''){
 		$out['node']		=$node_id;
 		$out['child']		=$child_id;
 		$out['type']		=$type;
@@ -319,7 +311,7 @@ class MySensorSend extends MySensors{
 
 
 	// ---------------------------------------------------------
-	private function _convertSubType($type, $sub_type){
+	protected function _convertSubType($type, $sub_type){
 		if(!is_numeric($sub_type)){
 			$sub_type=$this->types[$type][$sub_type];
 			if($sub_type == ''){return false;}
@@ -328,7 +320,7 @@ class MySensorSend extends MySensors{
 	}
 
 	// ---------------------------------------------------------
-	private function _convertType($type){
+	protected function _convertType($type){
 		if(!is_numeric($type)){
 			$type=$this->message_types[$type];
 			if($type == ''){return false;}
@@ -337,13 +329,13 @@ class MySensorSend extends MySensors{
 	}
 
 	// ---------------------------------------------------------
-	private function _parseMessage($line){
+	protected function _parseMessage($line){
 		$line=trim($line);
 		list($l['node'],$l['child'],$l['type'],$l['ack'],$l['sub'],$l['payload'])=explode(";",$line);
 		return $l;
 	}
 	// ---------------------------------------------------------
-	private function _filterAnswer($line){
+	protected function _filterAnswer($line){
 		$a=$this->_parseMessage($line);
 		if(	$a['node']	==$this->last_message['node'] and 
 			($a['child']==$this->last_message['child'] or ($a['node']==0 and $a['child']==255)  ) and
@@ -355,7 +347,30 @@ class MySensorSend extends MySensors{
 	}
 
 	// ---------------------------------------------------------
-	private function _telnet($message,$fetch_answer=false){
+	protected function _transmit($message,$fetch_answer=false){
+		trigger_error("No '_transmit' method available. You must use MySensorSendEthernet or MySensorSendSerial.",E_USER_ERROR);
+	}
+
+}
+
+// #######################################################################################
+class MySensorSendEthernet extends MySensorSend{
+
+	protected $socket_timeout_message	=2;
+	protected $socket_timeout_answer	=4;
+
+	protected $gateway_ip	='';
+	protected $gateway_port=5003;
+
+	// ---------------------------------------------------------
+	function __construct($gw_ip,$gw_port=""){
+		parent::__construct();
+		$this->gateway_ip = $gw_ip;
+		$gw_port and $this->gateway_port=$gw_port;
+	}
+
+	// ---------------------------------------------------------
+	protected function _transmit($message,$fetch_answer=false){
 		$this->last_message		=$message;
 		$this->last_raw_message	=$this->_buildRawMessage($this->last_message);
 		$this->last_answer		='';
@@ -368,7 +383,7 @@ class MySensorSend extends MySensors{
 			$timeout=$this->socket_timeout_message;			
 		}
 
-		$socket = @fsockopen($this->gateway_ip, $this->gateway_port, $errno, $errstr,$timeout);
+		$socket = @fsockopen($this->gateway_ip, $this->gateway_port, $errno, $errstr, $timeout);
 		if(!$socket){
 			return false;
 		}
@@ -406,15 +421,108 @@ class MySensorSend extends MySensors{
 		@fclose($socket);
 		return $out;
 	}
+
 }
 
+// #######################################################################################
+/*
+	This class is absolutely NOT tested. This is just a skeleton, for someone willing to implement it right!
+	BTW this require the PhpSerial.php class from https://github.com/Xowap/PHP-Serial/
 
+	if you find some bugs in the PhpSerial class, please also send a PR to the original author to submit your fixes, 
+	rather than creating a detached fork of his class in this project.
+	
+*/
+class MySensorSendSerial extends MySensorSend{
+	
+	protected $socket_timeout_message	=2;
+	protected $socket_timeout_answer	=4;
+
+	protected $serial_port;
+
+	//protected $arduino_boot_time; 
+
+	// ---------------------------------------------------------
+	function __construct($port="/dev/ttyS0"){
+		parent::__construct();
+		$this->serial_port = $port;
+		
+		require(dirname(__FILE__).'/PhpSerial.php');
+
+	}
+	
+	protected function _transmit($message,$fetch_answer=false){
+		$this->last_message		=$message;
+		$this->last_raw_message	=$this->_buildRawMessage($this->last_message);
+		$this->last_answer		='';
+		$this->last_raw_answer	='';
+
+
+		// start the serial connection
+		$serial =$serial = new PhpSerial;
+		
+		// First we must specify the device. This works on both linux and windows (if
+		// your linux serial device is /dev/ttyS0 for COM1, etc)
+		$serial->deviceSet($this->serial_port);
+
+		// We can change the baud rate, parity, length, stop bits, flow control
+		// http://forum.mysensors.org/topic/340/pidome-domotica-home-automation
+		$serial->confBaudRate(115000);
+		$serial->confParity("none");
+		$serial->confCharacterLength(8);
+		$serial->confStopBits(1);
+		$serial->confFlowControl("none"); // ?
+
+		// Then we need to open it
+		$serial->deviceOpen();
+		
+		// we may have to sleep before arduino restart ?
+		// http://stackoverflow.com/questions/13114275/php-serial-port-data-return-from-arduino
+		//sleep($this->arduino_boot_time);
+
+		// We may need to return if nothing happens for $timeout seconds
+		if($fetch_answer){
+			$timeout=$this->socket_timeout_answer;
+		}
+		else{
+			$timeout=$this->socket_timeout_message;			
+		}
+		
+		stream_set_timeout($serial->_dHandle, $timeout);
+		
+		// send message
+		$serial->sendMessage($this->last_raw_message."\n");
+		
+		if($fetch_answer){
+			$line='';
+			$until_t = time() + $timeout;
+			while(true){
+				if(!$serial->_dHandle or time() > $until_t){
+					break;
+				}
+			
+		        $line = $serial->readPort();
+				if($this->last_answer 		= $this->_filterAnswer($line)){
+					$this->last_raw_answer	= trim($line);
+					$out = $this->last_answer['payload'];
+					break;
+				}
+		    }
+		}
+		else{
+			$out=true;
+		}
+
+		$serial->deviceClose();
+		return $out;
+	}
+}
 
 /*
 
 // #######################################################################################
-// Somebody willing to implement it ?
 class MySensorReceive  extends MySensors{	
+	// Somebody willing to implement it ?
 }
 
 */

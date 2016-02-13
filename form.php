@@ -13,6 +13,12 @@ $defaults['payload']	="";
 $defaults['message']	="";
 $defaults['wait']		="";
 
+//
+$gateway = "eth"; 				// or set it to "serial"
+$defaults['s_port']	="COM1";	//serial port
+
+// ##########################################################################
+
 // process form inputs
 foreach($defaults as $d => $v){
 	$form[$d] = isset($_REQUEST[$d]) ? $_REQUEST[$d] : $v;
@@ -40,8 +46,13 @@ foreach($mess_types as $t_name => $t){
 
 //process form 
 if($_REQUEST['do']){
-	
-	$mys=new MySensorSend($form['ip'],$form['port']);
+
+	if($gateway=='serial'){
+		$mys=new MySensorSendSerial($form['s_port']);
+	}
+	else{
+		$mys=new MySensorSendEthernet($form['ip'],$form['port']);
+	}
 	$result=$mys->sendMessage($form['node'],$form['child'],$form['type'],$form['ack'],$form['sub'],$form['payload'],$form['wait']);
 	$date=date('l, H\h i\m s\s');
 	if($result){
@@ -87,6 +98,34 @@ for($i=0;$i<=1;$i++){
 	$html_options_ack .=">$i</option>\n";
 }
 $html_checked_wait = $form['wait'] ? ' checked="checked"':'';
+
+
+if($gateway=='serial'){
+	$html_gateway=<<<EOF
+					Gateway SerialPort : 
+					<div class="form-group">
+						<input type="text" class="form-control" id="s_port" value="{$form['s_port']}" size=25 placeholder="Serial Port">
+					</div>
+
+EOF;
+}
+else{
+	$html_gateway=<<<EOF
+					Gateway IP : 
+					<div class="form-group">
+						<input type="text" class="form-control" id="ip" value="{$form['ip']}" size=12 placeholder="IP address">
+					</div>
+					<div class="form-group">
+						&nbsp; Port :
+						<input type="text" class="form-control" id="port" value="{$form['port']}" size=4  placeholder="Port">
+						&nbsp;
+					</div>
+
+EOF;
+	
+}
+
+
 echo <<<EOF
 <!DOCTYPE html>
 <html lang='en'>
@@ -233,15 +272,7 @@ $( document ).ready(function() {
 					</tbody>
 				</table>
 				<div class="form-inline text-right">
-					Gateway : 
-					<div class="form-group">
-						<input type="text" class="form-control" id="ip" value="{$form['ip']}" size=12 placeholder="IP address">
-					</div>
-					<div class="form-group">
-						:
-						<input type="text" class="form-control" id="port" value="{$form['port']}" size=4  placeholder="Port">
-						&nbsp;
-					</div>
+$html_gateway
 					<div class="form-group">
 						<span id="span_wait"><input type="checkbox" class="form-control" name='wait' id="wait" value="1" $html_checked_wait> Wait for Answer?</span>
 					</div>
