@@ -19,7 +19,7 @@ Finally  you can also send the message to the gateway.
 ![Form screenshot](/images/form.png)
 
 
-### Command Line SCript
+### Command Line Script
 Here is the *mysensors_bin.php* help.
 
 	soif@server:~# ./mysensors_bin.php -h
@@ -58,7 +58,7 @@ Here is the *mysensors_bin.php* help.
 
 
 ## Contributions
-Contributions are welcome ! Please fork this at GitHub and submit PR to the **develop** branch.
+Contributions are welcome ! Please fork this repo at GitHub and submit your PR to the **develop** branch.
 
 
 ## Licence
