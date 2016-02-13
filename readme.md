@@ -53,5 +53,16 @@ Here is the *mysensors_bin.php* help.
 ## Disclaimer
 Missing some documentation about the MySensors messages protocol, some features may not work as expected (ie the *req* command was not tested). So I won't be responsible if you'd burn your house or kill a cat by using this software! ;-)
 
+
 ## Contributions
 Contributions are welcome ! Please fork this at GitHub and submit PR to the **develop** branch.
+
+
+## Licence
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
