@@ -25,7 +25,6 @@
 
 // #######################################################################################
 class MySensors{
-	public $version			='1.1';
 
 	protected $gateway_ip	='';
 	protected $gateway_port=5003;
