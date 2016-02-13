@@ -1,9 +1,7 @@
 <?
 require(dirname(__FILE__).'/src/mysensors.class.php');
 
-// define your default here -----
-$defaults['ip']		="10.1.7.40";
-$defaults['port']		="5003";
+// define your default here ------------------------------------------------
 $defaults['node']		="0";
 $defaults['child']		="0";
 $defaults['type']		="0";
@@ -13,19 +11,26 @@ $defaults['payload']	="";
 $defaults['message']	="";
 $defaults['wait']		="";
 
-//
-$gateway = "eth"; 				// or set it to "serial"
-$defaults['s_port']	="COM1";	//serial port
+// set the gateway type "eth" or "serial" -------------------------------------
+$gateway 			= "eth";		// gateway type to use
+$defaults['ip']		="10.1.7.40";	// default IP address
+$defaults['port']	="5003";		// default TCP Port
 
-// ##########################################################################
+//or 
+//$gateway 			= "serial"; 	// gateway type to use
+//$defaults['s_port']	="COM1";	// default Serial Port
 
-// process form inputs
+
+
+// ############################################################################################
+
+// process form inputs --------------------------------------------
 foreach($defaults as $d => $v){
 	$form[$d] = isset($_REQUEST[$d]) ? $_REQUEST[$d] : $v;
 }
 
 
-//make javascript types object
+// make javascript types objects -----------------------------------
 $mys= new MySensors();
 $mess_types=$mys->getMessageTypes();
 $sub_types=$mys->getSubTypes();
@@ -44,17 +49,16 @@ foreach($mess_types as $t_name => $t){
 }
 
 
-//process form 
+// process the  form -------------------------------------------------
 if($_REQUEST['do']){
-
 	if($gateway=='serial'){
 		$mys=new MySensorSendSerial($form['s_port']);
 	}
 	else{
 		$mys=new MySensorSendEthernet($form['ip'],$form['port']);
 	}
+
 	$result=$mys->sendMessage($form['node'],$form['child'],$form['type'],$form['ack'],$form['sub'],$form['payload'],$form['wait']);
-	$date=date('l, H\h i\m s\s');
 	if($result){
 		$class='success';
 		if($form['wait']){
@@ -73,10 +77,13 @@ if($_REQUEST['do']){
 			$err_mess="Something went wrong. Check GW is receiving on {$form['ip']}:{$form['port']} ! ";			
 		}
 	}
+
 	$last_mess	 	  = "<li> Query&nbsp;&nbsp; : <b>".$mys->GetRawMessage()."</b></li>\n" ;
 	if($form['wait']){
 		$last_mess	 .= "<li> Answer : <b>".$mys->GetRawAnswer()."</b></li>\n" ;
 	}
+
+	$date=date('l, H\h i\m s\s');
 	$html_result=<<<EOF
 <div id='results' class='alert alert-$class'>
 	<H4>$err_mess</H4>
@@ -91,7 +98,7 @@ EOF;
 }
 
 
-//build ack menu
+// build ack menu --------------------------------------------------------------
 for($i=0;$i<=1;$i++){
 	$html_options_ack .="<option value='$i'";
 	$html_options_ack .= $form['ack']==$i ? ' selected="selected"':'';
@@ -100,6 +107,7 @@ for($i=0;$i<=1;$i++){
 $html_checked_wait = $form['wait'] ? ' checked="checked"':'';
 
 
+// show form input depending on the gateway type --------------------------------
 if($gateway=='serial'){
 	$html_gateway=<<<EOF
 					Gateway SerialPort : 
@@ -125,12 +133,12 @@ EOF;
 	
 }
 
-
+// Display HTML -----------------------------------------------------------------------
 echo <<<EOF
 <!DOCTYPE html>
 <html lang='en'>
 	<head>
-		<title>MySensor Sender</title>
+		<title>MySensor Sender / Converter</title>
     	<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta charset="UTF-8">
 		<link rel="icon" href="../../favicon.ico">
@@ -235,10 +243,9 @@ $( document ).ready(function() {
 
 });
 		</script>
-
 	</head>
-	<body>
 
+	<body>
 		<div class="bg-info">
 			<div class="container">
 				<h1><img src="http://www.mysensors.org/MySensorsLogo.png" height=50>&nbsp; Message Sender / Converter</h1>
@@ -282,6 +289,7 @@ $html_gateway
 			</p>
 $html_result
 		</div>
+
 	</body>
 </html>
 EOF;
