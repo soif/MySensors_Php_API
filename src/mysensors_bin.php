@@ -2,7 +2,7 @@
 <?
 require(dirname(__FILE__).'/mysensors.class.php');
 
-$options = "p:hav";
+$options = "p:havg";
 $opts = getopt( $options, array("help") );
 
 //clean argv -----
@@ -30,16 +30,16 @@ Usage:
 	-p port 	: set the gateway port if not 5003
 	-a		: send an ACK
 	-v 		: verbose (show message sent to gateway)
+	-g 		: get answer
 	-h 		: show this help
 	
 	IP		: (required) Gateway IP address
 
 	COMMAND		: (required) is one of the following commands:
-		- present NODE CHILD TYPE
+		- presentation NODE CHILD TYPE
 		- set NODE CHILD TYPE PAYLOAD
-		 -req NODE CHILD TYPE
-		 -internal NODE CHILD TYPE
-		 -internal_get NODE CHILD TYPE
+		- req NODE CHILD TYPE
+		- internal NODE CHILD TYPE
 
 		Using the following parameters :
 		- NODE 		: Node ID
@@ -76,41 +76,32 @@ if(!isset($argv[3]) or !isset($argv[4]) or !isset($argv[5])){ExitError("Missing 
 
 $mys=new MySensorSend($argv[1],$opts['p']);
 $ack	= isset($opts['a']) ? 1 : 0;
+$wait	= isset($opts['g']) ? 1 : 0;
+$verbose= isset($opts['v']) ? 1:0;
 
-if($argv[2]=='present'){
-	$r=$mys->present($argv[3],$argv[4],$argv[5],$ack);
-}
-elseif($argv[2]=='set'){
-	if(!isset($argv[6])){ExitError("missing paylaod");}
-	$r=$mys->set($argv[3], $argv[4], $argv[5], $argv[6], $ack);		
-}
-elseif($argv[2]=='req'){
-	$r=$mys->req($argv[3], $argv[4], $argv[5], $ack);
-	echo "$r\n";
-	$answer=$mys->getRawAnswer();
-}
-elseif($argv[2]=='internal'){
-	$r=$mys->internal($argv[3], $argv[4], $argv[5], $ack);
-}
-elseif($argv[2]=='internal_get'){
-	$r=$mys->internal_get($argv[3], $argv[4], $argv[5], $ack);
-	echo "$r\n";
-	$answer=$mys->getRawAnswer();
-}
-/*
-elseif($argv[2]=='stream'){
-	$r=$mys->stream($argv[3], $argv[4], $argv[5], $ack);
-}
-*/
-else{
+$commands=array_keys($mys->getMessageTypes());
+if(!in_array($argv[2],$commands)){
 	ExitError("Unknow command '{$argv[2]}' !");
 }
+if($argv[2]=='set' and !isset($argv[6])){
+	ExitError("Missing payload argument");
+}
 
-$verbose= isset($opts['v']) ? 1:0;
+
+$r=$mys->sendMessage($argv[3], $argv[4], $argv[2] , $ack, $argv[5], $argv[6], $wait);
+if($wait){
+	if($r){
+		echo "$r\n";
+	}
+	else{
+		ExitError("No answer received or command failed!");
+	}
+}
+
 if($verbose){
 	echo " - Message : ". $mys->getRawMessage()."\n";
-	if($answer){
-		echo " - Answer  :  $answer\n";
+	if($wait and $r){
+		echo " - Answer  : ".$mys->getRawAnswer()."\n";
 	}
 }
 

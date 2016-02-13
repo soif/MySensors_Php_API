@@ -25,17 +25,15 @@
 
 // #######################################################################################
 class MySensors{
-	public $version			='1.0';
+	public $version			='1.1';
 
 	protected $gateway_ip	='';
 	protected $gateway_port=5003;
 
-	protected $message 	=array();
-	protected $answer 	=array();
-	protected $raw_answer='';
-
-	//http://www.mysensors.org/download/serial_api_15
-	//http://ci.mysensors.org/job/MySensorsArduino/branch/development/Doxygen_HTML/group__MyMessagegrp.html
+	// http://www.mysensors.org/download/serial_api_15
+	// http://ci.mysensors.org/job/MySensorsArduino/branch/development/Doxygen_HTML/group__MyMessagegrp.html
+	// https://github.com/mysensors/Arduino/blob/development/libraries/MySensors/core/MyMessage.h
+	
 	protected $message_types=array(
 		'presentation'	=> 0,	// Sent by a node when they present attached sensors. This is usually done in setup() at startup.
 		'set'			=> 1,	// This message is sent from or to a sensor when a sensor value should be updated
@@ -44,7 +42,7 @@ class MySensors{
 		'stream'		=> 4	// Used for OTA firmware updates
 	);
 
-	protected $present_types=array(
+	protected $presentation_types=array(
 		'S_DOOR'			=> 0,	// Door and window sensors (V_TRIPPED, V_ARMED)
 		'S_MOTION'			=> 1,	// Motion sensors (V_TRIPPED, V_ARMED)
 		'S_SMOKE'			=> 2,	// Smoke sensor (V_TRIPPED, V_ARMED)
@@ -82,11 +80,10 @@ class MySensors{
 		'S_SOUND'			=> 33,	// Sound sensor (V_LEVEL (in dB), V_TRIPPED, V_ARMED)
 		'S_VIBRATION'		=> 34,	// Vibration sensor (V_LEVEL (vibration in Hz), V_TRIPPED, V_ARMED)
 		'S_MOISTURE'		=> 35,	// Moisture sensor (V_LEVEL (water content or moisture in percentage?), V_TRIPPED, V_ARMED),
-
-		'S_INFO'			=> 36,	// 
-		'S_GAS'				=> 37,	// 
-		'S_GPS'				=> 38,	// 
-		'S_WATER_QUALITY'	=> 39,	//
+		'S_INFO'			=> 36,	// LCD text device / Simple information device on controller, V_TEXT
+		'S_GAS'				=> 37,	// Gas meter, V_FLOW, V_VOLUME
+		'S_GPS'				=> 38,	// GPS Sensor, V_POSITION
+		'S_WATER_QUALITY'	=> 39,	// V_TEMP, V_PH, V_ORP, V_EC, V_STATUS 
 	);
 
 	protected $setreq_types=array(
@@ -140,13 +137,13 @@ class MySensors{
 		'V_HVAC_SETPOINT_HEAT'	=> 45,	// HVAC/Heater setpoint (S_HVAC, S_HEATER)
 		'V_HVAC_FLOW_MODE'		=> 46,	// Flow mode for HVAC ("Auto", "ContinuousOn", "PeriodicOn") (S_HVAC)
 
-		'V_TEXT'		=> 47,	// 
-		'V_CUSTOM'		=> 48,	// 
-		'V_POSITION'	=> 49,	// 
-		'V_IR_RECORD'	=> 50,	// 
-		'V_PH'			=> 51,	// 
-		'V_ORP'			=> 52,	// 
-		'V_EC'			=> 53,	// 
+		'V_TEXT'		=> 47,	// S_INFO. Text message to display on LCD or controller device
+		'V_CUSTOM'		=> 48,	// Custom messages used for controller/inter node specific commands, preferably using S_CUSTOM device type.
+		'V_POSITION'	=> 49,	// GPS position and altitude. Payload: latitude;longitude;altitude(m). E.g. "55.722526;13.017972;18"
+		'V_IR_RECORD'	=> 50,	// Record IR codes S_IR for playback
+		'V_PH'			=> 51,	// S_WATER_QUALITY, water PH
+		'V_ORP'			=> 52,	// S_WATER_QUALITY, water ORP : redox potential in mV
+		'V_EC'			=> 53,	// S_WATER_QUALITY, water electric conductivity μS/cm (microSiemens/cm)
 	);
 
 	protected $internal_types=array(
@@ -169,16 +166,16 @@ class MySensors{
 		'I_GET_NONCE'			=> 16,	// Used between sensors when requesting nonce.
 		'I_GET_NONCE_RESPONSE'	=> 17,	// Used between sensors for nonce response.
 
-		'I_SIGNING_PRESENTATION'=> 15,	// same as I_REQUEST_SIGNING ?
-		'I_NONCE_REQUEST'		=> 16,	// same as I_GET_NONCE ?
-		'I_NONCE_RESPONSE'		=> 17,	// same as I_GET_NONCE_RESPONSE ?
+		'I_SIGNING_PRESENTATION'=> 15,	// same as I_REQUEST_SIGNING ?	//!< Provides signing related preferences (first byte is preference version)
+		'I_NONCE_REQUEST'		=> 16,	// same as I_GET_NONCE ?	//!< Request for a nonce
+		'I_NONCE_RESPONSE'		=> 17,	// same as I_GET_NONCE_RESPONSE ?	// //!< Payload is nonce data
 
 		'I_HEARTBEAT'			=> 18,	//
 		'I_PRESENTATION'		=> 19,	//
 		'I_DISCOVER'			=> 20,	//
 		'I_DISCOVER_RESPONSE'	=> 21,	//
 		'I_HEARTBEAT_RESPONSE'	=> 22,	//
-		'I_LOCKED'				=> 23,	//
+		'I_LOCKED'				=> 23,	//!< Node is locked (reason in string-payload)
 	);
 
 	protected $stream_types=array(
@@ -189,198 +186,226 @@ class MySensors{
 		'ST_SOUND'						=> 4,	//
 		'ST_IMAGE'						=> 5,	//
 	);
+	
+	protected $types =array();
+
+	// ---------------------------------------------------------
+	function __construct(){
+		$this->types=array(
+			0	=> $this->presentation_types,
+			1	=> $this->setreq_types,
+			2	=> $this->setreq_types,
+			3	=> $this->internal_types,
+			4	=> $this->stream_types
+		);
+	}
+
+	// ---------------------------------------------------------
+	public function getMessageTypes(){
+		return $this->message_types;
+	}
+	// ---------------------------------------------------------
+	public function getSubTypes(){
+		return $this->types;
+	}
 
 }
+
 // #######################################################################################
 class MySensorSend extends MySensors{
+
+	protected $last_message 		=array();
+	protected $last_answer			=array();
+	protected $last_raw_message 	='';
+	protected $last_raw_answer	='';
 
 	private $socket_timeout_message	=2;
 	private $socket_timeout_answer	=4;
 
 	// ---------------------------------------------------------
 	function __construct($gw_ip,$gw_port=""){
+		parent::__construct();
 		$this->gateway_ip = $gw_ip;
-		$gw_port and $this->gateway_port=$gw_port;	
+		$gw_port and $this->gateway_port=$gw_port;
 	}
 
 	// ---------------------------------------------------------
-	public function present($node_id,$child_id,$sub_type,$ack=false){
-		if(!is_numeric($sub_type)){
-			$sub_type=$this->present_types[$sub_type];
-			if($sub_type == ''){return false;}
-		}
-		$this->message['type']		=$this->message_types['presentation'];
-		$this->message['sub']		=$sub_type;
-		$this->message['node']		=$node_id;
-		$this->message['child']		=$child_id;
-		$this->message['payload']	=0;
-		$this->message['ack']		=$ack;
-		
-		return $this->_telnetSend();
+	public function sendMessage($node_id, $child_id, $type, $ack, $sub_type, $payload, $return_answer=false){
+		$type		=$this->_convertType($type);
+		$sub_type	=$this->_convertSubType($type, $sub_type);
+		if($type !== false && $sub_type !== false ){
+			$message=$this->_message2array($node_id, $child_id, $type, $ack, $sub_type, $payload);
+			return $this->_telnet($message,$return_answer);
+		}		
 	}
+
+	// ---------------------------------------------------------
+	public function presentation($node_id,$child_id,$sub_type,$ack=false){
+		$type=$this->message_types['presentation'];
+		//return $this->sendMessage($node_id, $child_id, $type, $ack, $sub_type, $payload, $return_answer);
+		return $this->sendMessage($node_id, $child_id, $type, $ack, $sub_type, '');
+	}
+	
 	// ---------------------------------------------------------
 	public function set($node_id,$child_id,$sub_type,$payload,$ack=false){
-		if(!is_numeric($sub_type)){
-			$sub_type=$this->setreq_types[$sub_type];
-			if($sub_type == ''){return false;}
-		}
-		$this->message['type']		=$this->message_types['set'];
-		$this->message['sub']		=$sub_type;
-		$this->message['node']		=$node_id;
-		$this->message['child']		=$child_id;
-		$this->message['payload']	=$payload;
-		$this->message['ack']		=$ack;
-		
-		return $this->_telnetSend();
+		$type=$this->message_types['set'];
+		return $this->sendMessage($node_id, $child_id, $type, $ack, $sub_type, $payload);
+
 	}
 	// ---------------------------------------------------------
 	public function req($node_id,$child_id,$sub_type,$ack=false){
-		if(!is_numeric($sub_type)){
-			$sub_type=$this->setreq_types[$sub_type];
-			if($sub_type == ''){return false;}
-		}
-		$this->message['type']		=$this->message_types['req'];
-		$this->message['sub']		=$sub_type;
-		$this->message['node']		=$node_id;
-		$this->message['child']		=$child_id;
-		$this->message['payload']	='';
-		$this->message['ack']		=$ack;
-		
-		return $this->_telnetGet();
+		$type=$this->message_types['req'];
+		return $this->sendMessage($node_id, $child_id, $type, $ack, $sub_type, '', true);
 	}
 
 	// ---------------------------------------------------------
-	public function internal($node_id,$child_id,$sub_type,$ack=false){
-		if(!is_numeric($sub_type)){
-			$sub_type=$this->internal_types[$sub_type];
-			if($sub_type == ''){return false;}
-		}
-		$this->message['type']		=$this->message_types['internal'];
-		$this->message['sub']		=$sub_type;
-		$this->message['node']		=$node_id;
-		$this->message['child']		=$child_id;
-		$this->message['payload']	='';
-		$this->message['ack']		=$ack;
-
-		return $this->_telnetSend();
+	public function internal($node_id,$child_id,$sub_type,$ack=false,$return_answer=false){
+		$type=$this->message_types['internal'];
+		return $this->sendMessage($node_id, $child_id, $type, $ack, $sub_type, '',$return_answer);
 	}
-
-	// ---------------------------------------------------------
-	public function internal_get($node_id,$child_id,$sub_type,$ack=false){
-		if(!is_numeric($sub_type)){
-			$sub_type=$this->internal_types[$sub_type];
-			if($sub_type == ''){return false;}
-		}
-		$this->message['type']		=$this->message_types['internal'];
-		$this->message['sub']		=$sub_type;
-		$this->message['node']		=$node_id;
-		$this->message['child']		=$child_id;
-		$this->message['payload']	='';
-		$this->message['ack']		=$ack;
-
-		return $this->_telnetGet();
-	}
-
 
 /*
 	// ---------------------------------------------------------
-	public function stream(){
-		$this->message['type']		=$this->message_types['stream'];
+	public function stream($node_id,$child_id,$sub_type,$ack=false){
+		$type=$this->message_types['stream'];
+		return $this->sendMessage($node_id, $child_id, $type, $ack, $sub_type, ???'', ?);
 	}
 */
 
+	// ---------------------------------------------------------
+	public function encodeMessage($node_id, $child_id, $type, $ack, $sub_type, $payload=''){
+		$message	= $this->_message2array($node_id, $child_id, $type, $ack, $sub_type, $payload);
+		return $this->_buildRawMessage($message);
+	}
+
+	// ---------------------------------------------------------
+	public function decodeMessage($raw_message){
+		$message = $this->_parseMessage($raw_message);
+		return $message;
+	}
+
+	// ---------------------------------------------------------
+	private function _buildRawMessage($message){		
+		$raw  ='';
+		$raw .=$message['node']	. ';';
+		$raw .=$message['child']	. ';';
+		$raw .=$message['type']	. ';';
+		$raw .=$message['ack']	. ';';
+		$raw .=$message['sub']	. ';';
+		$raw .=$message['payload'];
+		return $raw;
+	}
+
+	// ---------------------------------------------------------
+	private function _message2array($node_id, $child_id, $type, $ack, $sub_type, $payload=''){
+		$out['node']		=$node_id;
+		$out['child']		=$child_id;
+		$out['type']		=$type;
+		$out['ack']			=$ack ? 1 : 0;;
+		$out['sub']			=$sub_type;
+		$out['payload']		=$payload;
+		return $out;
+	}
 
 	// ---------------------------------------------------------
 	public function getRawMessage(){
-		//convert bool to int
-		$this->message['ack'] = $this->message['ack'] ? 1 : 0;
-
-		$message  ='';
-		$message .=$this->message['node']	. ';';
-		$message .=$this->message['child']	. ';';
-		$message .=$this->message['type']	. ';';
-		$message .=$this->message['ack']	. ';';
-		$message .=$this->message['sub']	. ';';
-		$message .=$this->message['payload'];
-		
-		return $message;	
+		return $this->last_raw_message;	
 	}
 
 	// ---------------------------------------------------------
 	public function getRawAnswer(){
-		return $this->raw_answer;
+		return $this->last_raw_answer;
+	}
+
+
+	// ---------------------------------------------------------
+	private function _convertSubType($type, $sub_type){
+		if(!is_numeric($sub_type)){
+			$sub_type=$this->types[$type][$sub_type];
+			if($sub_type == ''){return false;}
+		}
+		return $sub_type;
 	}
 
 	// ---------------------------------------------------------
-	private function _parseAnswer($line){
+	private function _convertType($type){
+		if(!is_numeric($type)){
+			$type=$this->message_types[$type];
+			if($type == ''){return false;}
+		}
+		return $type;
+	}
+
+	// ---------------------------------------------------------
+	private function _parseMessage($line){
 		$line=trim($line);
-		$this->raw_answer=$line;
 		list($l['node'],$l['child'],$l['type'],$l['ack'],$l['sub'],$l['payload'])=explode(";",$line);
 		return $l;
 	}
 	// ---------------------------------------------------------
 	private function _filterAnswer($line){
-		$a=$this->_parseAnswer($line);
-		if(	$a['node']	==$this->message['node'] and 
-			($a['child']==$this->message['child'] or ($a['node']==0 and $a['child']==255)  ) and
-			$a['type']	== $this->message['type'] and 
-			$a['sub']	== $this->message['sub']
+		$a=$this->_parseMessage($line);
+		if(	$a['node']	==$this->last_message['node'] and 
+			($a['child']==$this->last_message['child'] or ($a['node']==0 and $a['child']==255)  ) and
+			$a['type']	==$this->last_message['type'] and 
+			$a['sub']	==$this->last_message['sub']
 		){
-			$this->answer=$a;
-			return true;
+			return $a;
 		}
 	}
 
 	// ---------------------------------------------------------
-	private function _telnetSend(){
-		$message = $this->getRawMessage();
-		$socket = @fsockopen($this->gateway_ip, $this->gateway_port, $errno, $errstr,$this->socket_timeout_message);
+	private function _telnet($message,$fetch_answer=false){
+		$this->last_message		=$message;
+		$this->last_raw_message	=$this->_buildRawMessage($this->last_message);
+		$this->last_answer		='';
+		$this->last_raw_answer	='';
+		
+		if($fetch_answer){
+			$timeout=$this->socket_timeout_answer;
+		}
+		else{
+			$timeout=$this->socket_timeout_message;			
+		}
+
+		$socket = @fsockopen($this->gateway_ip, $this->gateway_port, $errno, $errstr,$timeout);
 		if(!$socket){
 			return false;
 		}
-		if(!fputs($socket, $message."\n")){
+
+		if(!fputs($socket, $this->last_raw_message."\n")){
 			@fclose($socket);
 			return false;
 		}
-		fclose($socket);
-		return true;
-	}
 
-
-
-	// ---------------------------------------------------------
-	private function _telnetGet(){
-		$message = $this->getRawMessage();
-		$socket = @fsockopen($this->gateway_ip, $this->gateway_port, $errno, $errstr, $this->socket_timeout_answer);
-		if(!$socket){
-			return false;
-		}
-		if(!fputs($socket, $message."\n")){
-			@fclose($socket);
-			return false;
-		}
-		$line='';
-		$until_t = time() + $this->socket_timeout_answer;
-		while(true){
-			if(!$socket or time() > $until_t){
-				break;
-			}
-			
-	        $char =fread($socket, 1);
-	        $line .= $char;
-	        if($char=="\n"){
-				if($this->_filterAnswer($line)){
-					$payload=$this->answer['payload'];
+		if($fetch_answer){
+			$line='';
+			$until_t = time() + $timeout;
+			while(true){
+				if(!$socket or time() > $until_t){
 					break;
 				}
-				$line='';
-			}
-	    }
-		
-		@fclose($socket);
-		return $payload;
-	}
+			
+		        $char =fread($socket, 1);
+		        $line .= $char;
+		        if($char=="\n"){
+					if($this->last_answer 		= $this->_filterAnswer($line)){
+						$this->last_raw_answer	= trim($line);
+						$out = $this->last_answer['payload'];
+						break;
+					}
+					$line='';
+				}
+		    }
+			
+		}
+		else{
+			$out=true;
+		}
 
+		@fclose($socket);
+		return $out;
+	}
 }
 
 
