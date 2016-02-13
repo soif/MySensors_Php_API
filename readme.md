@@ -3,7 +3,7 @@
 This class implements methods to directly send messages (and get answers) to a [MySensors](http://www.mysensors.org) gateway.
 
 
-### Files
+### Main Files
 - **example.php** : Basic usage example
 - **form.php** : Send (or visually convert) messages to your Gateway
 - **src/mysensors_bin.php** : an excecutable script to send/receive message from the command line
@@ -11,7 +11,7 @@ This class implements methods to directly send messages (and get answers) to a [
 - **src/PhpSerial.php** : Serial handling [class by Rémy Sanchez](https://github.com/Xowap/PHP-Serial/)
 
 
-### Form
+### Sender / Converter Form
 *form.php* allow you compose messages using convenient dynamic drowndown menu. resulting message is then shown in the message box.
 You can also do the reverse action : type any text in the message box, and it will dynamically decode it.
 Finally  you can also send the message to the gateway.
@@ -19,7 +19,7 @@ Finally  you can also send the message to the gateway.
 ![Form screenshot](/images/form.png)
 
 
-### Command Line
+### Command Line SCript
 Here is the *mysensors_bin.php* help.
 
 	soif@server:~# ./mysensors_bin.php -h
@@ -54,7 +54,7 @@ Here is the *mysensors_bin.php* help.
 
 ## Disclaimer
 - Currently only the Ethernet Gateway is supposed to work. **The Serial Gateway if just a draft**, for somebody willing to test it and implementing correctly (Push  your PR!).
-- Missing some documentation about the MySensors messages protocol, some features may not work as expected (ie the *req* command was not tested). So I won't be responsible if you'd burn your house or kill a cat by using this software! ;-)
+- Missing some detailed documentation about the MySensors messages protocol, some features may not work as expected (ie: the *req* command was not tested). So I won't be responsible if you'd burn your house or kill a cat by using this software! ;-)
 
 
 ## Contributions
