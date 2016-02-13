@@ -138,7 +138,7 @@ echo <<<EOF
 <!DOCTYPE html>
 <html lang='en'>
 	<head>
-		<title>MySensor Sender / Converter</title>
+		<title>MySensors Sender &amp; Converter</title>
     	<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta charset="UTF-8">
 		<link rel="icon" href="http://www.mysensors.org/favicon.ico">
