@@ -185,6 +185,7 @@ class MySensors{
 	
 	protected $types =array();
 
+
 	// ---------------------------------------------------------
 	function __construct(){
 		$this->types=array(
@@ -200,12 +201,15 @@ class MySensors{
 	public function getMessageTypes(){
 		return $this->message_types;
 	}
+
 	// ---------------------------------------------------------
 	public function getSubTypes(){
 		return $this->types;
 	}
 
 }
+
+
 
 // #######################################################################################
 class MySensorSend extends MySensors{
@@ -241,8 +245,8 @@ class MySensorSend extends MySensors{
 	public function set($node_id,$child_id,$sub_type,$payload,$ack=false){
 		$type=$this->message_types['set'];
 		return $this->sendMessage($node_id, $child_id, $type, $ack, $sub_type, $payload);
-
 	}
+
 	// ---------------------------------------------------------
 	public function req($node_id,$child_id,$sub_type,$ack=false){
 		$type=$this->message_types['req'];
@@ -308,7 +312,6 @@ class MySensorSend extends MySensors{
 		return $this->last_raw_answer;
 	}
 
-
 	// ---------------------------------------------------------
 	protected function _convertSubType($type, $sub_type){
 		if(!is_numeric($sub_type)){
@@ -333,6 +336,7 @@ class MySensorSend extends MySensors{
 		list($l['node'],$l['child'],$l['type'],$l['ack'],$l['sub'],$l['payload'])=explode(";",$line);
 		return $l;
 	}
+
 	// ---------------------------------------------------------
 	protected function _filterAnswer($line){
 		$a=$this->_parseMessage($line);
@@ -351,6 +355,8 @@ class MySensorSend extends MySensors{
 	}
 
 }
+
+
 
 // #######################################################################################
 class MySensorSendEthernet extends MySensorSend{
@@ -420,8 +426,9 @@ class MySensorSendEthernet extends MySensorSend{
 		@fclose($socket);
 		return $out;
 	}
-
 }
+
+
 
 // #######################################################################################
 /*
@@ -447,9 +454,9 @@ class MySensorSendSerial extends MySensorSend{
 		$this->serial_port = $port;
 		
 		require(dirname(__FILE__).'/PhpSerial.php');
-
 	}
 	
+	// ---------------------------------------------------------
 	protected function _transmit($message,$fetch_answer=false){
 		$this->last_message		=$message;
 		$this->last_raw_message	=$this->_buildRawMessage($this->last_message);
@@ -517,6 +524,11 @@ class MySensorSendSerial extends MySensorSend{
 	}
 }
 
+
+
+
+
+
 /*
 
 // #######################################################################################
@@ -525,5 +537,6 @@ class MySensorReceive  extends MySensors{
 }
 
 */
+
 
 ?>
