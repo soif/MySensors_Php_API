@@ -174,7 +174,7 @@ function message2form(){
 	formTypeChange(false);
 }
 
-function formTypeChange(with_update=true){
+function formTypeChange(with_update){
 	var mess_type	=$('#td_type SELECT').val();
 	var sub_list	=[];
 	var select_sub 	= $('#td_sub SELECT');
@@ -222,9 +222,9 @@ function UpdateWait(){
 	}
 }
 $( document ).ready(function() {
-	formTypeChange();
+	formTypeChange(true);
 	$('#td_type SELECT').on('keyup change',function(e){
-		formTypeChange();
+		formTypeChange(true);
 	});
 	
 	$('#td_node INPUT, #td_child INPUT, #td_type SELECT, #td_ack SELECT, #td_sub SELECT, #td_payload INPUT').on('keyup change',function(e){
