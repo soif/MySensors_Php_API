@@ -112,7 +112,7 @@ if($gateway=='serial'){
 	$html_gateway=<<<EOF
 					Gateway SerialPort : 
 					<div class="form-group">
-						<input type="text" class="form-control" id="s_port" value="{$form['s_port']}" size=25 placeholder="Serial Port">
+						<input type="text" class="form-control" name="s_port" value="{$form['s_port']}" size=25 placeholder="Serial Port">
 					</div>
 
 EOF;
@@ -121,11 +121,11 @@ else{
 	$html_gateway=<<<EOF
 					Gateway IP : 
 					<div class="form-group">
-						<input type="text" class="form-control" id="ip" value="{$form['ip']}" size=12 placeholder="IP address">
+						<input type="text" class="form-control" name="ip" value="{$form['ip']}" size=12 placeholder="IP address">
 					</div>
 					<div class="form-group">
 						&nbsp; Port :
-						<input type="text" class="form-control" id="port" value="{$form['port']}" size=4  placeholder="Port">
+						<input type="text" class="form-control" name="port" value="{$form['port']}" size=4  placeholder="Port">
 						&nbsp;
 					</div>
 
