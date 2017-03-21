@@ -248,7 +248,7 @@ $( document ).ready(function() {
 	<body>
 		<div class="bg-info">
 			<div class="container">
-				<h1><img src="http://www.mysensors.org/MySensorsLogo.png" height=50>&nbsp; Message Sender / Converter</h1>
+				<h1><img src="https://www.mysensors.org/images/MySensorsLogo.png" height=50>&nbsp; Message Sender / Converter</h1>
 			</div>
 		</div>
 		
